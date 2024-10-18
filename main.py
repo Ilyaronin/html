@@ -1,46 +1,47 @@
-from flask import Flask
+from flask import Flask, render_template
 import random
 import requests
 
 app = Flask(__name__)
 
-@app.route("/")
+def result_calculate(size, lights, device):
+    #Переменные для энергозатратности приборов
+    home_coef = 100
+    light_coef = 0.04
+    devices_coef = 5   
+    return size * home_coef + lights * light_coef + device * devices_coef
+
+#Первая страница
+@app.route('/')
 def index():
-    text = '<h1>Привет! Ты здесь можешь узнать пару интересных фактов про технологическую зависимость!</h1><a href="/random_fact">Посмотреть случайный факт!</a><a href="/monetka">Подбросить монетку!</a><a href="/password">Сгенерировать пароль</a><a href="/dog_img">Рандомная фотка</a>'
-    return text
+    return render_template('index.html')
 
-@app.route("/monetka")
-def random_coin():
-    coin = ['Орел', 'Решка']
-    return f'<p>Вам выпало:{random.choice(coin)}</p>'
+#Вторая страница
+@app.route('/<size>')
+def lights(size):
+    return render_template(
+                            'lights.html', 
+                            size=size
+                           )
 
-@app.route("/password")
-def password():
-    elements = "+-/*!&$#?=@<>"
-    password = ""
-    for i in range(7):
-        password += random.choice(elements)
-    return f'<p>Сгенерированый пароль:{password}</p>'
+#Третья страница
+@app.route('/<size>/<lights>')
+def electronics(size, lights):
+    return render_template(
+                            'electronics.html',
+                            size = size, 
+                            lights = lights                           
+                           )
 
-@app.route("/dog_img")   
-def get_dog_image_url():    
-    url = 'https://random.dog/woof.json'
-    res = requests.get(url)
-    data = res.json()
-    return data['url']
-@app.route("/secret")   
-def secret():
-    return '<img src="https://avatars.mds.yandex.net/i?id=6bf70aba7435542f9c78e9d068beb69aa66b45cb-5905711-images-thumbs&n=13" alt="Image 1">'    
+#Расчет
+@app.route('/<size>/<lights>/<device>')
+def end(size, lights, device):
+    return render_template('end.html', 
+                            result=result_calculate(int(size),
+                                                    int(lights), 
+                                                    int(device)
+                                                    )
+                        )
 
 
-@app.route("/random_fact")
-def random_fact():
-    fact = ['Большинство людей, страдающих технологической зависимостью, испытывают сильный стресс, когда они находятся вне зоны покрытия сети или не могут использовать свои устройства.',
-            'Согласно исследованию, проведенному в 2018 году, более 50% людей в возрасте от 18 до 34 лет считают себя зависимыми от своих смартфонов.',
-            'Изучение технологической зависимости является одной из наиболее актуальных областей научных исследований в настоящее время.',
-            'Согласно исследованию, проведенному в 2019 году, более 60% людей отвечают на рабочие сообщения в своих смартфонах в течение 15 минут после того, как они вышли с работы.',
-            'Один из способов борьбы с технологической зависимостью - это поиск занятий, которые приносят удовольствие и улучшают настроение.',
-            'Илон Маск утверждает, что социальные сети созданы для того, чтобы удерживать нас внутри платформы, чтобы мы тратили как можно больше времени на просмотр контента.',
-            'Социальные сети имеют как позитивные, так и негативные стороны, и мы должны быть более осознанными в использовании этих платформ.']
-    return f'<p>{random.choice(fact)}</p>'
 app.run(debug=True)
